@@ -1,0 +1,117 @@
+---
+title: "Dplyr & GGplot Demo"
+author: "Stan West"
+date: "2025-03-17"
+output: pdf_document
+---
+
+This Rmarkdown demonstrates some of the functionality of dplyr and ggplot2.
+
+```{r setup,echo=FALSE,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(ggalt)
+library(tidyr)
+library(ggExtra)
+library(ggcorrplot)
+
+data("midwest", package = "ggplot2")
+
+```
+
+
+## Use dplyr to explore our data
+Look at the unique number of states and counties and compute some summary stats
+
+```{r}
+midwest %>%
+  group_by(county) %>%
+  summarize(n_county = n()) %>%
+  arrange(desc(n_county))
+
+summary(midwest)
+
+midwest %>%
+  group_by(state) %>%
+  summarize(n_state = n()) %>%
+  ggplot(., aes(x = state, y = n_state,fill = state))+
+  geom_bar(stat="identity")+
+  labs(title = "State Bargraph",
+       subtitle = "State Raw counts",
+       y = "State Raw Counts",
+       x = "State")
+  
+ggplot(midwest,aes(x = state, fill=state))+
+  geom_bar(stat = "count")
+
+```
+
+
+## Look at individual populations across states in scatterplot
+
+```{r}
+ggplot(midwest, aes(x = area, y = poptotal))+
+  geom_point(aes(col=state, size = popdensity))+
+  ylim(c(0,500000))+
+  geom_smooth(method = "loess",se=F)+
+  labs(title = "Scatterplot of Population over Area",
+       x = "Area",
+       y = "Total",
+       caption = "Note: Not all points are plotted",
+       tag = "Fig. 1")+
+  theme(axis.text.x = element_text(angle = 65, vjust = 0.5,family = "serif"),
+        plot.title = element_text(face = "bold"))
+
+
+
+```
+
+
+
+## Marinal historgrams
+
+```{r}
+g <- ggplot(midwest, aes(x = area, y = poptotal))+
+  geom_point(aes(col=state, size = popdensity))+
+  ylim(c(0,500000))+
+  geom_smooth(method = "loess",se=F)+
+  labs(title = "Scatterplot of Population over Area",
+       x = "Area",
+       y = "Total",
+       caption = "Note: Not all points are plotted",
+       tag = "Fig. 1")+
+  theme(axis.text.x = element_text(angle = 65, vjust = 0.5,family = "serif"),
+        plot.title = element_text(face = "bold"))
+
+ggMarginal(g,type = "density")
+
+```
+
+
+## Correlations within data
+
+
+```{r}
+correlations <- cor(midwest %>% select(starts_with("perc")))
+p_val <- cor_pmat(midwest %>% select(starts_with("perc")))
+
+
+ggcorrplot(corr = correlations,
+           type = "lower",
+           lab = TRUE,
+           lab_size = 2,
+           method = "square",
+           colors = c("red","green", "white"),
+           title = "Correlation of Percentages",
+           hc.order = TRUE,
+           p.mat = p_val,ggtheme = )
+
+
+```
+
+
+
+
+
+
+
